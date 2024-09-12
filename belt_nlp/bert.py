@@ -11,6 +11,7 @@ from torch.nn import CrossEntropyLoss, DataParallel, Linear, Module, MSELoss
 from torch.optim import AdamW, Optimizer
 from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
 from transformers import AutoModel, AutoTokenizer, BatchEncoding, BertModel, PreTrainedTokenizerBase, RobertaModel
+from tqdm.auto import tqdm
 
 
 class BertBase(ABC):
@@ -81,7 +82,7 @@ class BertBase(ABC):
         dataloader = DataLoader(
             dataset, sampler=RandomSampler(dataset), batch_size=self.batch_size, collate_fn=self.collate_fn
         )
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs)):
             self._train_single_epoch(dataloader, optimizer)
 
     def _predict_logits(self, x: list[str], batch_size: Optional[int] = None) -> Tensor:
@@ -111,7 +112,7 @@ class BertBase(ABC):
     def _train_single_epoch(self, dataloader: DataLoader, optimizer: Optimizer) -> None:
         self.neural_network.train()
 
-        for step, batch in enumerate(dataloader):
+        for step, batch in tqdm(enumerate(dataloader), leave=False, total=len(dataloader)):
             if self.num_labels > 1:
                 labels = batch[-1].long().to(self.device)
                 loss_function = CrossEntropyLoss()
